@@ -5,6 +5,7 @@
 // Three.js globals
 let scene, renderer, clock;
 window.playerTank = null;
+window.playerBarrel = null; // Reference to barrel for aim
 window.renderer = null;
 
 // Initialize the game
@@ -160,11 +161,11 @@ function createPlayerTank() {
     // Turret
     const turretGeometry = new THREE.CylinderGeometry(1.5, 1.8, 1.2, 8);
     const turret = new THREE.Mesh(turretGeometry, bodyMaterial);
-    turret.position.y = 1.5;
+    turret.position.y = 1.2;
     turret.castShadow = true;
     window.playerTank.add(turret);
 
-    // Barrel
+    // Barrel - rotated to point FORWARD (-Z in local space, which is forward when tank yaw is 0)
     const barrelGeometry = new THREE.CylinderGeometry(0.3, 0.4, 5, 8);
     const barrelMaterial = new THREE.MeshStandardMaterial({
         color: 0x333333,
@@ -172,10 +173,11 @@ function createPlayerTank() {
         metalness: 0.5
     });
     const barrel = new THREE.Mesh(barrelGeometry, barrelMaterial);
-    barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 2, 2.5);
+    barrel.rotation.x = -Math.PI / 2; // Point forward (negative Z)
+    barrel.position.set(0, 2.2, -1.5); // Position in front of turret
     barrel.castShadow = true;
     window.playerTank.add(barrel);
+    window.playerBarrel = barrel; // Store reference for aiming
 
     // Tracks
     const trackGeometry = new THREE.BoxGeometry(1, 1.5, 6.5);
@@ -245,8 +247,14 @@ function updatePlayerMovement(delta) {
         window.playerTank.position.copy(tankPos);
     }
 
-    // Update tank visual rotation to match aim
+    // Update tank visual rotation to match aim (yaw only)
     window.playerTank.rotation.y = CameraSystem.getHorizontalRotation();
+
+    // Update barrel pitch to match aim elevation
+    if (window.playerBarrel) {
+        // Barrel rotation: -PI/2 is horizontal forward, add pitch for up/down aim
+        window.playerBarrel.rotation.x = Math.PI / 2 + CameraSystem.tankPitch;
+    }
 
     // In first person, sync camera position to tank
     if (CameraSystem.currentMode === CONFIG.CAMERA_MODES.FIRST_PERSON) {

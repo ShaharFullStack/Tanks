@@ -107,8 +107,8 @@ const Enemies = {
     fire(enemy) {
         const weapon = WEAPONS[0]; // Enemies use basic missile
 
-        // Aim at player with some inaccuracy
-        const targetPos = CameraSystem.camera.position.clone();
+        // Aim at player TANK with some inaccuracy
+        const targetPos = window.playerTank.position.clone();
         targetPos.x += (Math.random() - 0.5) * 25;
         targetPos.z += (Math.random() - 0.5) * 25;
 
@@ -160,12 +160,14 @@ const Enemies = {
         UI.showMessage('ENEMY DESTROYED! +$' + CONFIG.CREDITS_PER_KILL);
     },
 
-    // Update enemy AI (look at player)
+    // Update enemy AI (look at player tank)
     update(delta) {
         GameState.enemies.forEach(enemy => {
-            const lookTarget = CameraSystem.camera.position.clone();
-            lookTarget.y = enemy.position.y;
-            enemy.lookAt(lookTarget);
+            if (window.playerTank) {
+                const lookTarget = window.playerTank.position.clone();
+                lookTarget.y = enemy.position.y;
+                enemy.lookAt(lookTarget);
+            }
         });
     }
 };
